@@ -1,6 +1,6 @@
 {
   "name": "privatetrade",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Stock Trading Strategy Backtesting Simulator",
   "main": "backend/server.js",
   "scripts": {

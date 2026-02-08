@@ -1,13 +1,33 @@
-# RELEASE NOTES v2.0.1
+# RELEASE NOTES v2.0.2 (Hotfix)
 
-**릴리스 일자**: 2026년 2월 8일  
+**릴리스 일자**: 2026년 2월 9일  
 **배포 대상**: Production  
 **배포 방식**: Blue-Green (무중단 배포)  
-**배포 예상 소요시간**: 10분  
+**배포 예상 소요시간**: 5분  
 
 ---
 
 ## 1. 주요 변경사항
+
+### v2.0.2 (Hotfix - Patch Version)
+
+**버그 수정**:
+- ✅ [TICKET-028] 백테스트 결과 다운로드 엔드포인트 404 에러 수정
+  - 프론트엔드가 올바른 백엔드 엔드포인트 호출 (`/api/backtest/result/:id`)
+  - 다운로드 기능 정상 작동
+
+**파일 변경**:
+- `frontend/pages/specific-stock-selection.html` (다운로드 함수 수정)
+- 백엔드 변경 없음
+
+**테스트 결과**:
+- Code verification: 26/26 항목 ✅
+- Integration tests: ✅ 통과
+- Regression tests: ✅ 통과
+
+---
+
+## 2. 이전 릴리스 (v2.0.1)
 
 ### v2.0.1 (Bug Fix Release - Patch Version)
 
