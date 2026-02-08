@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>특정 종목 선택 - 주식 백테스팅 시뮬레이터</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container-main {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+        }
+        .stock-mode-selector {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+        .mode-option {
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .mode-option:hover {
+            border-color: #0d6efd;
+            background-color: #f0f6ff;
+        }
+        .mode-option.active {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+        }
+        .mode-option input[type="radio"] {
+            margin-right: 15px;
+        }
+        .specific-stock-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            display: none;
+        }
+        .specific-stock-section.active {
+            display: block;
+        }
+        .stock-add-form {
+            margin-bottom: 20px;
+        }
+        .stock-search-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .stock-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .stock-item {
+            padding: 10px 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        .stock-item:hover {
+            background-color: #f8f9fa;
+        }
+        .btn-remove {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-remove:hover {
+            background-color: #c82333;
+        }
+        .selected-count {
+            padding: 10px 15px;
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 6px;
+            margin: 10px 0;
+            color: #0c5460;
+        }
+        .action-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-action {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .btn-start {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-start:hover {
+            background-color: #218838;
+        }
+        .btn-clear {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-clear:hover {
+            background-color: #5a6268;
+        }
+        .status-message {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            display: none;
+        }
+        .status-message.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            display: block;
+        }
+        .status-message.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: block;
+        }
+        .progress-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            display: none;
+        }
+        .progress-section.active {
+            display: block;
+        }
+        .progress-container {
+            margin: 15px 0;
+        }
+        .progress-label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 24px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .results-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            display: none;
+        }
+        .results-section.active {
+            display: block;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .results-table th {
+            background-color: #0d6efd;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .results-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .metric-name {
+            font-weight: 500;
+            color: #333;
+        }
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #0d6efd;
+        }
+        .metric-value.positive {
+            color: #28a745;
+        }
+        .metric-value.negative {
+            color: #dc3545;
+        }
+        .success-badge {
+            display: inline-block;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .results-metadata {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-main">
+        <!-- Header -->
+        <div class="mb-4">
+            <h1>주식 백테스팅 시뮬레이터</h1>
+            <p class="text-muted">특정 종목 선택 & 백테스팅</p>
+        </div>
+
+        <!-- Stock Mode Selection -->
+        <div class="stock-mode-selector">
+            <h3>종목 선택 모드</h3>
+            <p class="text-muted mb-3">백테스팅할 종목 범위를 선택해주세요.</p>
+
+            <div class="mode-option active">
+                <input type="radio" name="stock-mode" value="all" id="mode-all" checked>
+                <label for="mode-all" style="margin: 0; cursor: pointer;">
+                    <strong>전체 종목</strong><br>
+                    <small class="text-muted">코스피 200 전체 종목 (약 200개)</small>
+                </label>
+            </div>
+
+            <div class="mode-option">
+                <input type="radio" name="stock-mode" value="filtered" id="mode-filtered">
+                <label for="mode-filtered" style="margin: 0; cursor: pointer;">
+                    <strong>필터 기반</strong><br>
+                    <small class="text-muted">블랙리스트/화이트리스트 적용</small>
+                </label>
+            </div>
+
+            <div class="mode-option">
+                <input type="radio" name="stock-mode" value="specific" id="mode-specific">
+                <label for="mode-specific" style="margin: 0; cursor: pointer;">
+                    <strong>특정 종목만</strong><br>
+                    <small class="text-muted">직접 선택한 종목들만 백테스팅</small>
+                </label>
+            </div>
+        </div>
+
+        <!-- Specific Stock Section -->
+        <div class="specific-stock-section" id="specific-stock-section">
+            <h3>특정 종목 선택</h3>
+
+            <div class="stock-add-form">
+                <label for="stock-search" class="form-label">종목 추가</label>
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        class="form-control stock-search-input" 
+                        id="stock-search" 
+                        placeholder="종목 코드 (예: 005930) 또는 종목명 (예: 삼성전자) 입력"
+                        autocomplete="off"
+                    >
+                    <button class="btn btn-primary" type="button" onclick="addStock()">추가</button>
+                </div>
+                <small class="text-muted">최대 100개까지 선택 가능합니다.</small>
+            </div>
+
+            <!-- Selected Count Badge -->
+            <div class="selected-count" id="selected-count">
+                선택된 종목: <strong id="count-value">0</strong>개
+            </div>
+
+            <!-- Status Messages -->
+            <div class="status-message" id="status-message"></div>
+
+            <!-- Selected Stocks List -->
+            <div class="mt-4">
+                <h5>선택된 종목 목록</h5>
+                <ul class="stock-list" id="selected-stocks-list">
+                    <li class="text-muted" style="padding: 20px; text-align: center;">
+                        아직 선택된 종목이 없습니다.
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-action btn-start" id="backtest-btn" onclick="startBacktest()">백테스팅 시작</button>
+                <button class="btn-action btn-clear" onclick="clearAllStocks()">전체 초기화</button>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-section" id="progress-section">
+            <h4>백테스팅 진행 상황</h4>
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>진행률</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 13px; color: #666;">
+                <span id="progress-status">연결 중...</span>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="results-section">
+            <h4>백테스팅 결과</h4>
+            <div class="success-badge" id="results-success-badge"></div>
+            
+            <div class="results-metadata">
+                <strong>백테스트 ID:</strong> <span id="results-backtest-id">-</span><br>
+                <strong>완료 시간:</strong> <span id="results-completed-at">-</span>
+            </div>
+
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>성과 지표</th>
+                        <th>값</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="metric-name">총 수익률</td>
+                        <td class="metric-value" id="metric-total-return">-</td>
+                    </tr>
+                    <tr>
+                        <td class="metric-name">샤프 지수</td>
+                        <td class="metric-value" id="metric-sharpe-ratio">-</td>
+                    </tr>
+                    <tr>
+                        <td class="metric-name">최대 손실률</td>
+                        <td class="metric-value" id="metric-max-drawdown">-</td>
+                    </tr>
+                    <tr>
+                        <td class="metric-name">총 거래 횟수</td>
+                        <td class="metric-value" id="metric-total-trades">-</td>
+                    </tr>
+                    <tr>
+                        <td class="metric-name">승률</td>
+                        <td class="metric-value" id="metric-win-rate">-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 20px;">
+                <button class="btn-action btn-start" onclick="downloadResults()" id="download-btn" style="margin-right: 10px;">결과 다운로드</button>
+                <button class="btn-action btn-clear" onclick="resetResults()">초기화</button>
+            </div>
+        </div>
+
+        <!-- Strategy Selection (Placeholder) -->
+        <div class="card mt-4" style="padding: 20px;">
+            <h4>투자 전략 선택</h4>
+            <p class="text-muted">특정 종목을 선택하고 원하는 투자 전략을 선택한 후 백테스팅을 시작하세요.</p>
+            <div style="padding: 10px; background-color: #f8f9fa; border-radius: 6px;">
+                <strong>선택된 모드:</strong> <span id="current-mode-display">전체 종목</span><br>
+                <strong>선택된 종목 수:</strong> <span id="current-count-display">0</span>개
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mock stock data
+        const mockStocks = [
+            { code: '005930', name: '삼성전자' },
+            { code: '000660', name: 'SK하이닉스' },
+            { code: '068270', name: '셀트리온' },
+            { code: '035720', name: '카카오' },
+            { code: '012330', name: '현대모비스' },
+            { code: '051910', name: 'LG화학' },
+            { code: '017670', name: 'SK텔레콤' },
+            { code: '090430', name: '아모레퍼시픽' },
+        ];
+
+        let selectedStocks = [];
+        let currentMode = 'all';
+
+        // Mode switching
+        document.querySelectorAll('input[name="stock-mode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                currentMode = e.target.value;
+                updateModeDisplay();
+                switchMode();
+            });
+        });
+
+        function switchMode() {
+            const section = document.getElementById('specific-stock-section');
+            if (currentMode === 'specific') {
+                section.classList.add('active');
+                sendModeToServer('specific');
+            } else {
+                section.classList.remove('active');
+                selectedStocks = [];
+                updateStocksList();
+                sendModeToServer(currentMode);
+            }
+            updateModeDisplay();
+        }
+
+        function updateModeDisplay() {
+            const modeText = {
+                'all': '전체 종목',
+                'filtered': '필터 기반',
+                'specific': '특정 종목만'
+            };
+            document.getElementById('current-mode-display').textContent = modeText[currentMode];
+        }
+
+        function addStock() {
+            const searchInput = document.getElementById('stock-search');
+            const value = searchInput.value.trim().toUpperCase();
+
+            if (!value) {
+                showStatus('종목 코드 또는 명을 입력해주세요.', 'error');
+                return;
+            }
+
+            // Find stock
+            const stock = mockStocks.find(s => 
+                s.code === value || s.name.includes(value)
+            );
+
+            if (!stock) {
+                showStatus(`찾을 수 없는 종목입니다: ${value}`, 'error');
+                return;
+            }
+
+            if (selectedStocks.find(s => s.code === stock.code)) {
+                showStatus(`이미 추가된 종목입니다: ${stock.name}`, 'error');
+                return;
+            }
+
+            if (selectedStocks.length >= 100) {
+                showStatus('최대 100개까지만 추가할 수 있습니다.', 'error');
+                return;
+            }
+
+            selectedStocks.push(stock);
+            searchInput.value = '';
+            updateStocksList();
+            sendStocksToServer();
+            showStatus(`${stock.name} 추가됨`, 'success');
+        }
+
+        function removeStock(code) {
+            selectedStocks = selectedStocks.filter(s => s.code !== code);
+            updateStocksList();
+            sendStocksToServer();
+            showStatus('종목이 제거되었습니다.', 'success');
+        }
+
+        function clearAllStocks() {
+            if (confirm('정말 모든 종목을 제거하시겠습니까?')) {
+                selectedStocks = [];
+                updateStocksList();
+                sendStocksToServer();
+                showStatus('모든 종목이 초기화되었습니다.', 'success');
+            }
+        }
+
+        function updateStocksList() {
+            const listElement = document.getElementById('selected-stocks-list');
+            const countElement = document.getElementById('count-value');
+            const countDisplay = document.getElementById('current-count-display');
+
+            countElement.textContent = selectedStocks.length;
+            countDisplay.textContent = selectedStocks.length;
+
+            if (selectedStocks.length === 0) {
+                listElement.innerHTML = `
+                    <li class="text-muted" style="padding: 20px; text-align: center;">
+                        아직 선택된 종목이 없습니다.
+                    </li>
+                `;
+                return;
+            }
+
+            listElement.innerHTML = selectedStocks.map(stock => `
+                <li class="stock-item">
+                    <div>
+                        <strong>${stock.code}</strong>
+                        <span style="margin-left: 10px; color: #666;">${stock.name}</span>
+                    </div>
+                    <button class="btn-remove" onclick="removeStock('${stock.code}')">제거</button>
+                </li>
+            `).join('');
+        }
+
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('status-message');
+            statusElement.textContent = message;
+            statusElement.className = `status-message ${type}`;
+            setTimeout(() => {
+                statusElement.className = 'status-message';
+            }, 3000);
+        }
+
+        async function sendModeToServer(mode) {
+            try {
+                const response = await fetch('/api/stocks/mode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode })
+                });
+                const data = await response.json();
+                console.log('Mode changed:', data);
+            } catch (error) {
+                console.error('Failed to send mode:', error);
+            }
+        }
+
+        async function sendStocksToServer() {
+            if (selectedStocks.length === 0) return;
+
+            try {
+                const codes = selectedStocks.map(s => s.code);
+                const response = await fetch('/api/stocks/specific/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codes })
+                });
+                const data = await response.json();
+                console.log('Stocks sent to server:', data);
+            } catch (error) {
+                console.error('Failed to send stocks:', error);
+            }
+        }
+
+        async function startBacktest() {
+            if (selectedStocks.length === 0) {
+                showStatus('최소 1개 이상의 종목을 선택해주세요.', 'error');
+                return;
+            }
+
+            try {
+                // Disable button
+                const backTestBtn = document.getElementById('backtest-btn');
+                backTestBtn.disabled = true;
+                
+                showStatus(`${selectedStocks.length}개 종목에 대한 백테스팅을 시작합니다...`, 'success');
+                console.log('Starting backtest with:', selectedStocks);
+
+                const payload = {
+                    strategy: 'MA20_50', // 기본 전략
+                    start_date: '2024-01-01', // 기본 시작일
+                    end_date: '2025-12-31',   // 기본 종료일
+                    initial_capital: 10000000, // 초기 자본 1000만원
+                    stock_mode: currentMode
+                };
+
+                const response = await fetch('/api/backtest/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.backtest_id) {
+                    console.log('Backtest started:', data);
+                    showStatus(`✓ 백테스팅이 시작되었습니다. ID: ${data.backtest_id}`, 'success');
+                    
+                    // Show progress section and start monitoring
+                    showProgressSection();
+                    await monitorBacktestProgress(data.backtest_id);
+                } else {
+                    backTestBtn.disabled = false;
+                    showStatus(`오류: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                document.getElementById('backtest-btn').disabled = false;
+                console.error('Failed to start backtest:', error);
+                showStatus(`API 호출 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function showProgressSection() {
+            const progressSection = document.getElementById('progress-section');
+            const resultsSection = document.getElementById('results-section');
+            progressSection.classList.add('active');
+            resultsSection.classList.remove('active');
+            updateProgressBar(0);
+        }
+
+        function updateProgressBar(percent) {
+            const progressBar = document.getElementById('progress-bar-fill');
+            const progressPercent = document.getElementById('progress-percent');
+            progressBar.style.width = percent + '%';
+            progressPercent.textContent = Math.min(percent, 100) + '%';
+        }
+
+        async function monitorBacktestProgress(backtestId) {
+            const maxAttempts = 1800; // 30분 (1초 간격)
+            let attempt = 0;
+            const pollInterval = 1000; // 1초
+
+            return new Promise(async (resolve, reject) => {
+                const pollTimer = setInterval(async () => {
+                    attempt++;
+
+                    if (attempt > maxAttempts) {
+                        clearInterval(pollTimer);
+                        showStatus('타임아웃: 백테스팅이 30분 이상 진행되었습니다.', 'error');
+                        document.getElementById('backtest-btn').disabled = false;
+                        reject(new Error('Timeout'));
+                        return;
+                    }
+
+                    try {
+                        const progressResponse = await fetch(
+                            `/api/backtest/progress?id=${backtestId}`,
+                            { method: 'GET' }
+                        );
+
+                        if (!progressResponse.ok) {
+                            throw new Error(`HTTP ${progressResponse.status}`);
+                        }
+
+                        const progressData = await progressResponse.json();
+                        console.log('Progress update:', progressData);
+
+                        // Update progress
+                        if (progressData.progress_percent !== undefined) {
+                            updateProgressBar(progressData.progress_percent);
+                            const statusText = progressData.current_step 
+                                ? `${progressData.current_step}` 
+                                : `진행 중... ${progressData.progress_percent}%`;
+                            document.getElementById('progress-status').textContent = statusText;
+                        }
+
+                        // Check if completed
+                        if (progressData.status === 'completed') {
+                            clearInterval(pollTimer);
+                            updateProgressBar(100);
+                            document.getElementById('progress-status').textContent = '완료!';
+                            
+                            // Fetch final results
+                            await fetchAndDisplayResults(backtestId);
+                            resolve();
+                        } else if (progressData.status === 'error') {
+                            clearInterval(pollTimer);
+                            showStatus(`백테스팅 오류: ${progressData.error_message || '알 수 없는 오류'}`, 'error');
+                            document.getElementById('backtest-btn').disabled = false;
+                            reject(new Error(progressData.error_message));
+                        }
+                    } catch (error) {
+                        console.error('Progress polling error:', error);
+                        // Continue polling even if there's an error
+                    }
+                }, pollInterval);
+            });
+        }
+
+        async function fetchAndDisplayResults(backtestId, retryCount = 0) {
+            const maxRetries = 3;
+
+            try {
+                const resultsResponse = await fetch(
+                    `/api/backtest/result/${backtestId}`,
+                    { method: 'GET' }
+                );
+
+                if (!resultsResponse.ok) {
+                    throw new Error(`HTTP ${resultsResponse.status}`);
+                }
+
+                const results = await resultsResponse.json();
+                console.log('Backtest results:', results);
+
+                // Display results
+                displayResults(results);
+                document.getElementById('backtest-btn').disabled = false;
+                showStatus('✓ 백테스팅이 완료되었습니다!', 'success');
+
+            } catch (error) {
+                console.error('Failed to fetch results:', error);
+                
+                if (retryCount < maxRetries) {
+                    console.log(`Retrying to fetch results... (${retryCount + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return fetchAndDisplayResults(backtestId, retryCount + 1);
+                } else {
+                    showStatus(`결과 조회 실패: ${error.message}`, 'error');
+                    document.getElementById('backtest-btn').disabled = false;
+                }
+            }
+        }
+
+        function displayResults(results) {
+            const resultsSection = document.getElementById('results-section');
+            
+            // Set success badge text
+            const successBadge = document.getElementById('results-success-badge');
+            successBadge.textContent = `✓ 백테스팅 완료: ${results.backtest_id}`;
+
+            // Set metadata
+            document.getElementById('results-backtest-id').textContent = results.backtest_id;
+            document.getElementById('results-completed-at').textContent = 
+                formatDateTime(results.completed_at);
+
+            // Display metrics
+            const performance = results.performance || {};
+            
+            // Total return
+            let totalReturnValue = performance.total_return || '-';
+            let totalReturnPercent = totalReturnValue;
+            if (typeof totalReturnValue === 'string') {
+                totalReturnPercent = totalReturnValue;
+            } else {
+                totalReturnPercent = (totalReturnValue * 100).toFixed(2) + '%';
+            }
+            const totalReturnElement = document.getElementById('metric-total-return');
+            totalReturnElement.textContent = totalReturnPercent;
+            totalReturnElement.className = 'metric-value ' + 
+                (totalReturnValue && parseFloat(totalReturnValue) >= 0 ? 'positive' : 'negative');
+
+            // Sharpe ratio
+            const sharpeRatio = performance.sharpe_ratio || '-';
+            const sharpeElement = document.getElementById('metric-sharpe-ratio');
+            sharpeElement.textContent = typeof sharpeRatio === 'number' 
+                ? sharpeRatio.toFixed(2) 
+                : sharpeRatio;
+            sharpeElement.className = 'metric-value';
+
+            // Max drawdown
+            let maxDrawdown = performance.max_drawdown || '-';
+            let maxDrawdownValue = maxDrawdown;
+            if (typeof maxDrawdown === 'string') {
+                maxDrawdownValue = maxDrawdown;
+            } else {
+                maxDrawdownValue = (maxDrawdown * 100).toFixed(2) + '%';
+            }
+            const maxDrawdownElement = document.getElementById('metric-max-drawdown');
+            maxDrawdownElement.textContent = maxDrawdownValue;
+            maxDrawdownElement.className = 'metric-value negative';
+
+            // Total trades
+            const totalTrades = performance.total_trades || '-';
+            document.getElementById('metric-total-trades').textContent = 
+                typeof totalTrades === 'number' ? totalTrades.toLocaleString() : totalTrades;
+
+            // Win rate
+            let winRate = performance.win_rate || '-';
+            let winRateValue = winRate;
+            if (typeof winRate === 'string') {
+                winRateValue = winRate;
+            } else {
+                winRateValue = (winRate * 100).toFixed(1) + '%';
+            }
+            const winRateElement = document.getElementById('metric-win-rate');
+            winRateElement.textContent = winRateValue;
+            winRateElement.className = 'metric-value positive';
+
+            // Show results section
+            resultsSection.classList.add('active');
+        }
+
+        function formatDateTime(dateString) {
+            if (!dateString) return '-';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString('ko-KR');
+            } catch {
+                return dateString;
+            }
+        }
+
+        async function downloadResults() {
+            const backtestId = document.getElementById('results-backtest-id').textContent;
+            if (!backtestId || backtestId === '-') {
+                showStatus('다운로드할 결과가 없습니다.', 'error');
+                return;
+            }
+
+            try {
+                // Fetch the latest results from the correct endpoint
+                const response = await fetch(`/api/backtest/result/${backtestId}`, {
+                    method: 'GET'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const results = await response.json();
+                
+                // Prepare download data with all metrics
+                const downloadData = {
+                    backtest_id: results.backtest_id,
+                    completed_at: results.completed_at,
+                    performance: {
+                        total_return: document.getElementById('metric-total-return').textContent,
+                        sharpe_ratio: document.getElementById('metric-sharpe-ratio').textContent,
+                        max_drawdown: document.getElementById('metric-max-drawdown').textContent,
+                        total_trades: document.getElementById('metric-total-trades').textContent,
+                        win_rate: document.getElementById('metric-win-rate').textContent
+                    }
+                };
+
+                // Create CSV format (alternative to JSON)
+                const csvContent = generateCsvContent(downloadData);
+                
+                // Generate JSON format
+                const jsonContent = JSON.stringify(downloadData, null, 2);
+
+                // Download as JSON
+                downloadFile(jsonContent, `backtest-result-${backtestId}.json`, 'application/json');
+                
+                showStatus(`✓ 백테스트 결과가 다운로드되었습니다.`, 'success');
+            } catch (error) {
+                console.error('Failed to download results:', error);
+                showStatus(`다운로드 실패: ${error.message}`, 'error');
+            }
+        }
+
+        function generateCsvContent(data) {
+            let csv = 'Backtest Report\n\n';
+            csv += `Backtest ID,${data.backtest_id}\n`;
+            csv += `Completed At,${data.completed_at}\n\n`;
+            csv += 'Performance Metrics\n';
+            csv += 'Metric,Value\n';
+            csv += `Total Return,${data.performance.total_return}\n`;
+            csv += `Sharpe Ratio,${data.performance.sharpe_ratio}\n`;
+            csv += `Max Drawdown,${data.performance.max_drawdown}\n`;
+            csv += `Total Trades,${data.performance.total_trades}\n`;
+            csv += `Win Rate,${data.performance.win_rate}\n`;
+            return csv;
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+
+        function resetResults() {
+            const progressSection = document.getElementById('progress-section');
+            const resultsSection = document.getElementById('results-section');
+            progressSection.classList.remove('active');
+            resultsSection.classList.remove('active');
+            selectedStocks = [];
+            updateStocksList();
+            showStatus('초기화되었습니다.', 'success');
+        }
+
+        // Initialize
+        updateModeDisplay();
+        updateStocksList();
+    </script>
+</body>
+</html>
