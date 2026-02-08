@@ -101,6 +101,27 @@ HLD 테스트 수행 완료 기준:
 - **데이터 격리**: 각 테스트 간 데이터 간섭 없음
 - **버그 분류 정확성**: 버그의 원인을 정확히 분류해야 올바른 디버깅 담당자에게 할당 가능
 
+### 통합 로깅
+
+이 에이전트의 모든 활동은 `docs/log` 폴더의 통합 로그에 다음 포맷으로 기록됩니다.
+
+**기록 시점:**
+- 티켓 할당 수신 시
+- 작업 상태 변경 시 (todo → inprogress, inprogress → done 등)
+- 작업 완료 시
+- 오류 발생 시
+
+**로그 기록 포맷:**
+```
+[타임스탐프] [심각도] [에이전트역할] [활동유형] [티켓ID] [상태전이] [메시지] [산출물]
+```
+
+예시:
+```
+2026-02-08T14:36:15.456Z | INFO | HLD Test Operator | STATE_CHANGE | TICKET-001 | todo→inprogress | HLD 통합 테스트 수행 시작 | -
+2026-02-08T15:42:33.789Z | INFO | HLD Test Operator | COMPLETE | TICKET-001 | inprogress→done | 통합 테스트 완료 및 보고서 작성 | test-result/hld/report.md
+```
+
 ### 사용 가능 도구
 
 - **execute**: HLD 테스트 케이스 실행, 환경 시작/정지, 로그 수집

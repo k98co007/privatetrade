@@ -92,6 +92,27 @@ LLD 완료 기준:
 - **개발자 검토 필수**: 개발자의 실행 가능성 검증 완료 후 완료 판정
 - **시퀀스 일관성**: 다이어그램과 수도코드의 논리적 일관성 필수
 
+### 통합 로깅
+
+이 에이전트의 모든 활동은 `docs/log` 폴더의 통합 로그에 다음 포맷으로 기록됩니다.
+
+**기록 시점:**
+- 티켓 할당 수신 시
+- 작업 상태 변경 시 (todo → inprogress, inprogress → done 등)
+- 작업 완료 시
+- 오류 발생 시
+
+**로그 기록 포맷:**
+```
+[타임스탐프] [심각도] [에이전트역할] [활동유형] [티켓ID] [상태전이] [메시지] [산출물]
+```
+
+예시:
+```
+2026-02-08T14:36:15.456Z | INFO | LLD Architect | STATE_CHANGE | TICKET-001 | todo→inprogress | HLD 기반 상세 설계 시작 | docs/output/lld/TICKET-001.md
+2026-02-08T15:42:33.789Z | INFO | LLD Architect | COMPLETE | TICKET-001 | inprogress→done | LLD 작성 완료 및 개발자 검토 승인 | docs/output/lld/TICKET-001.md
+```
+
 ### 사용 가능 도구
 
 - **vscode**: LLD 문서 작성 및 편집, 다이어그램 구성

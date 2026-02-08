@@ -99,6 +99,27 @@ DevOps 운영 완료 기준:
 - **로그 분석**: 버그 발생 시 정확한 근본 원인 분석 필수
 - **보안 준수**: HLD에서 정의한 보안 설정 준수
 
+### 통합 로깅
+
+이 에이전트의 모든 활동은 `docs/log` 폴더의 통합 로그에 다음 포맷으로 기록됩니다.
+
+**기록 시점:**
+- 티켓 할당 수신 시
+- 작업 상태 변경 시 (todo → inprogress, inprogress → done 등)
+- 작업 완료 시
+- 오류 발생 시
+
+**로그 기록 포맷:**
+```
+[타임스탐프] [심각도] [에이전트역할] [활동유형] [티켓ID] [상태전이] [메시지] [산출물]
+```
+
+예시:
+```
+2026-02-08T14:36:15.456Z | INFO | DevOps Operator | STATE_CHANGE | TICKET-001 | todo→inprogress | 서비스 배포 및 모니터링 시작 | -
+2026-02-08T15:42:33.789Z | INFO | DevOps Operator | COMPLETE | TICKET-001 | inprogress→done | 서비스 정상 운영 중 | monitoring.log
+```
+
 ### 사용 가능 도구
 
 - **execute**: 배포 스크립트 실행 (Terraform, kubectl 등), 서비스 시작/중지

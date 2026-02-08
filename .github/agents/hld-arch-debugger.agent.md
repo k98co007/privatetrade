@@ -111,6 +111,27 @@ HLD 버그 수정 완료 기준:
 - **버전 관리**: Major 버전 증가 (아키텍처 변경이므로)
 - **영향도 분석 완전성**: 모든 영향받는 담당자를 빠짐없이 식별
 
+### 통합 로깅
+
+이 에이전트의 모든 활동은 `docs/log` 폴더의 통합 로그에 다음 포맷으로 기록됩니다.
+
+**기록 시점:**
+- 티켓 할당 수신 시
+- 작업 상태 변경 시 (todo → inprogress, inprogress → done 등)
+- 작업 완료 시
+- 오류 발생 시
+
+**로그 기록 포맷:**
+```
+[타임스탐프] [심각도] [에이전트역할] [활동유형] [티켓ID] [상태전이] [메시지] [산출물]
+```
+
+예시:
+```
+2026-02-08T14:36:15.456Z | INFO | HLD Architect Debugger | STATE_CHANGE | TICKET-001 | todo→inprogress | HLD 버그 분석 시작 | debug.log
+2026-02-08T15:42:33.789Z | INFO | HLD Architect Debugger | COMPLETE | TICKET-001 | inprogress→done | HLD 수정 완료 | docs/output/hld/TICKET-001.md
+```
+
 ### 사용 가능 도구
 
 - **vscode**: HLD 문서 읽기 및 수정

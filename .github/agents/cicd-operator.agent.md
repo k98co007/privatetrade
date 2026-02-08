@@ -98,6 +98,27 @@ tools: ['execute', 'read', 'edit', 'search', 'agent']
 - **배포 검증**: 배포 후 헬스 체크로 서비스 상태 확인 필수
 - **롤백 가능성**: 모든 배포는 이전 버전으로의 롤백이 가능해야 함
 
+### 통합 로깅
+
+이 에이전트의 모든 활동은 `docs/log` 폴더의 통합 로그에 다음 포맷으로 기록됩니다.
+
+**기록 시점:**
+- 티켓 할당 수신 시
+- 작업 상태 변경 시 (todo → inprogress, inprogress → done 등)
+- 작업 완료 시
+- 오류 발생 시
+
+**로그 기록 포맷:**
+```
+[타임스탐프] [심각도] [에이전트역할] [활동유형] [티켓ID] [상태전이] [메시지] [산출물]
+```
+
+예시:
+```
+2026-02-08T14:36:15.456Z | INFO | CI/CD Operator | STATE_CHANGE | TICKET-001 | todo→inprogress | 빌드 및 배포 시작 | -
+2026-02-08T15:42:33.789Z | INFO | CI/CD Operator | COMPLETE | TICKET-001 | inprogress→done | 빌드/배포 성공 | build.log, deployment.log
+```
+
 ### 사용 가능 도구
 
 - **execute**: CI/CD 파이프라인 실행, 빌드 도구 실행 (Maven, Gradle, Docker 등)

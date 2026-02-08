@@ -75,6 +75,27 @@ tools: ['vscode', 'read', 'edit', 'search', 'web']
 - **의존성 판단은 운영 에이전트**: 인터뷰 변경이 기존 요구사항과 어떤 영향을 미칠지는 운영 에이전트가 판단
 - **추적성**: 모든 인터뷰는 고객 커뮤니케이션 기록(녹음, 이메일, 통화 때)으로 추적 가능해야 함
 
+### 통합 로깅
+
+이 에이전트의 모든 활동은 `docs/log` 폴더의 통합 로그에 다음 포맷으로 기록됩니다.
+
+**기록 시점:**
+- 티켓 할당 수신 시
+- 작업 상태 변경 시 (todo → inprogress, inprogress → done 등)
+- 작업 완료 시
+- 오류 발생 시
+
+**로그 기록 포맷:**
+```
+[타임스탐프] [심각도] [에이전트역할] [활동유형] [티켓ID] [상태전이] [메시지] [산출물]
+```
+
+예시:
+```
+2026-02-08T14:36:15.456Z | INFO | Interview Coordinator | STATE_CHANGE | TICKET-001 | todo→inprogress | 고객 인터뷰 진행 | docs/userinterview/20260208.md
+2026-02-08T15:42:33.789Z | INFO | Interview Coordinator | COMPLETE | TICKET-001 | inprogress→done | 인터뷰 완료 및 고객 확인 완료 | docs/userinterview/20260208.md
+```
+
 ### 사용 가능 도구
 
 - **vscode**: 인터뷰 문서 작성 및 편집
