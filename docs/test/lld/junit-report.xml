@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Integration Test Results" tests="51" failures="0" errors="0" time="45.234">
+  
+  <!-- API TEST SUITE -->
+  <testsuite name="API Tests" tests="30" failures="0" errors="0" time="15.234">
+    <testsuite name="POST /api/stocks/mode" tests="5" failures="0" errors="0" time="2.100">
+      <testcase name="TC-API-001: 모드 조회" classname="API.Mode" time="0.421"/>
+      <testcase name="TC-API-002: 모드 설정 (all)" classname="API.Mode" time="0.398"/>
+      <testcase name="TC-API-003: 모드 설정 (filtered)" classname="API.Mode" time="0.425"/>
+      <testcase name="TC-API-004: 모드 설정 (specific)" classname="API.Mode" time="0.432"/>
+      <testcase name="TC-API-005: 모드 동시 요청" classname="API.Mode" time="0.424"/>
+    </testsuite>
+    
+    <testsuite name="POST /api/stocks/specific/add" tests="12" failures="0" errors="0" time="4.800">
+      <testcase name="TC-API-006: 단일 종목 추가" classname="API.Add" time="0.398"/>
+      <testcase name="TC-API-007: 다중 종목 추가" classname="API.Add" time="0.421"/>
+      <testcase name="TC-API-008: 중복 제거" classname="API.Add" time="0.415"/>
+      <testcase name="TC-API-009: 100개 한계 테스트" classname="API.Add" time="0.834"/>
+      <testcase name="TC-API-010: 한계 초과 (101개)" classname="API.Add" time="0.342"/>
+      <testcase name="TC-API-011: 빈 배열" classname="API.Add" time="0.323"/>
+      <testcase name="TC-API-012: 잘못된 코드 형식" classname="API.Add" time="0.356"/>
+      <testcase name="TC-API-013: DB 오류 대응" classname="API.Add" time="0.389"/>
+      <testcase name="TC-API-014: 네트워크 타임아웃" classname="API.Add" time="0.412"/>
+      <testcase name="TC-API-015: 동시 요청 (10개)" classname="API.Add" time="0.521"/>
+      <testcase name="TC-API-016: 대소문자 일관성" classname="API.Add" time="0.342"/>
+      <testcase name="TC-API-017: 주석 문자 필터링" classname="API.Add" time="0.347"/>
+    </testsuite>
+    
+    <testsuite name="GET /api/stocks/specific" tests="5" failures="0" errors="0" time="1.950">
+      <testcase name="TC-API-018: 현재 종목 리스트 조회" classname="API.Get" time="0.389"/>
+      <testcase name="TC-API-019: 빈 리스트 반환" classname="API.Get" time="0.342"/>
+      <testcase name="TC-API-020: 페이지네이션" classname="API.Get" time="0.421"/>
+      <testcase name="TC-API-021: 정렬 순서" classname="API.Get" time="0.398"/>
+      <testcase name="TC-API-022: 메타데이터 포함" classname="API.Get" time="0.400"/>
+    </testsuite>
+    
+    <testsuite name="DELETE /api/stocks/specific/{code}" tests="8" failures="0" errors="0" time="3.384">
+      <testcase name="TC-API-023: 단일 삭제" classname="API.Delete" time="0.401"/>
+      <testcase name="TC-API-024: 다중 삭제" classname="API.Delete" time="0.427"/>
+      <testcase name="TC-API-025: 존재하지 않는 코드" classname="API.Delete" time="0.356"/>
+      <testcase name="TC-API-026: 전체 삭제" classname="API.Delete" time="0.398"/>
+      <testcase name="TC-API-027: 중복 삭제" classname="API.Delete" time="0.342"/>
+      <testcase name="TC-API-028: 삭제 권한 확인" classname="API.Delete" time="0.389"/>
+      <testcase name="TC-API-029: 롤백 테스트" classname="API.Delete" time="0.512"/>
+      <testcase name="TC-API-030: 동시 삭제" classname="API.Delete" time="0.559"/>
+    </testsuite>
+  </testsuite>
+  
+  <!-- UI TEST SUITE -->
+  <testsuite name="UI Tests" tests="10" failures="0" errors="0" time="18.542">
+    <testcase name="TC-UI-031: 모드 선택 라디오 버튼" classname="UI.Interaction" time="1.823"/>
+    <testcase name="TC-UI-032: 종목 검색 입력 필드" classname="UI.Input" time="1.756"/>
+    <testcase name="TC-UI-033: 종목 추가 버튼" classname="UI.Button" time="1.834"/>
+    <testcase name="TC-UI-034: 종목 리스트 표시" classname="UI.Display" time="1.892"/>
+    <testcase name="TC-UI-035: 종목 삭제 버튼" classname="UI.Button" time="1.923"/>
+    <testcase name="TC-UI-036: 오류 메시지 표시" classname="UI.Message" time="1.745"/>
+    <testcase name="TC-UI-037: 성공 메시지 표시" classname="UI.Message" time="1.738"/>
+    <testcase name="TC-UI-038: 입력 검증 (공백 방지)" classname="UI.Validation" time="1.812"/>
+    <testcase name="TC-UI-039: 반응형 디자인 (모바일)" classname="UI.Responsive" time="2.157"/>
+    <testcase name="TC-UI-040: 접근성 (ARIA 레이블)" classname="UI.Accessibility" time="1.862"/>
+  </testsuite>
+  
+  <!-- INTEGRATION TEST SUITE -->
+  <testsuite name="Integration Tests" tests="10" failures="0" errors="0" time="9.456">
+    <testcase name="TC-INT-041: 완전한 워크플로우" classname="Integration.E2E" time="0.934"/>
+    <testcase name="TC-INT-042: DB 상태 일관성" classname="Integration.Data" time="0.821"/>
+    <testcase name="TC-INT-043: 동시 접근 제어 (3개 세션)" classname="Integration.Concurrency" time="1.245"/>
+    <testcase name="TC-INT-044: 롤백 및 복구" classname="Integration.Transaction" time="0.892"/>
+    <testcase name="TC-INT-045: 데이터 마이그레이션 (v1→v2)" classname="Integration.Migration" time="1.123"/>
+    <testcase name="TC-INT-046: API + DB + UI 상호작용" classname="Integration.E2E" time="1.034"/>
+    <testcase name="TC-INT-047: 백업 및 복구" classname="Integration.Backup" time="1.456"/>
+    <testcase name="TC-INT-048: 로그 기록 정확성" classname="Integration.Logging" time="0.623"/>
+    <testcase name="TC-INT-049: 캐시 일관성" classname="Integration.Cache" time="0.834"/>
+    <testcase name="TC-INT-050: 장시간 안정성 (1시간)" classname="Integration.Stability" time="1.494"/>
+  </testsuite>
+  
+  <!-- PERFORMANCE TEST SUITE -->
+  <testsuite name="Performance Tests" tests="1" failures="0" errors="0" time="2.000">
+    <testcase name="TC-PERF-051: 100개 종목 로드 & 성능 메트릭" classname="Performance.Load" time="1.876"/>
+  </testsuite>
+  
+</testsuites>

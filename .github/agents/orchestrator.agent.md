@@ -108,3 +108,23 @@ tools: ['vscode', 'execute', 'read', 'agent', 'edit', 'search', 'web', 'todo']
 - **의존성 준수**: 선행되지 않은 티켓은 절대 실행 불가
 - **추적성 확보**: 모든 변경은 티켓으로 기록되며 최초 인터뷰로부터 추적 가능해야 함
 - **아티팩트 검증**: 완료 판단 시 요구되는 산출물의 존재 및 품질 확인 필수
+
+### 파일 생성 및 정리 규칙
+
+모든 에이전트는 다음 파일 관리 규칙을 준수해야 합니다:
+
+#### 티켓 보고서 위치
+- 모든 티켓 관련 보고서, 완료 리포트, 체크리스트, 요약 문서는 반드시 `docs/tickets/reports/` 폴더에 생성
+- 예시: `TICKET-XXX-COMPLETION-REPORT.md`, `TICKET-XXX-DEPLOYMENT-REPORT.md`, `TICKET-XXX-EXECUTIVE-SUMMARY.md`
+- **금지**: 프로젝트 최상위 폴더에 티켓 관련 문서 생성
+
+#### 테스트 스크립트 관리
+- 임시 테스트 스크립트나 검증 스크립트 규칙:
+  - 일회성 검증 스크립트: 작업 완료 후 즉시 삭제
+  - 재사용 가능한 테스트: 적절한 테스트 디렉토리에 배치 (`test/`, `backend/test/`, `py_backtest/test/` 등)
+- **금지**: 프로젝트 최상위 폴더에 `test_*.py`, `test_*.js`, `verify_*.py` 등의 임시 파일 남기기
+
+#### 프로젝트 루트 정리
+- 프로젝트 최상위 폴더는 주요 설정 파일만 유지 (`package.json`, `requirements.txt`, `docker-compose.yml`, `README.md` 등)
+- 작업 산출물은 반드시 적절한 하위 디렉토리에 구조화하여 저장
+- 작업 완료 시 임시 파일 및 불필요한 파일 정리 필수

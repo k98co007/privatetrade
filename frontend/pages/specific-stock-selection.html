@@ -247,6 +247,121 @@
             font-size: 13px;
             color: #666;
         }
+        /* Strategy Selection Styles */
+        .strategy-selector {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+        }
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .strategy-card {
+            padding: 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+        .strategy-card:hover {
+            border-color: #0d6efd;
+            background-color: #f0f6ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(13,110,253,0.1);
+        }
+        .strategy-card.active {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+        }
+        .strategy-card .strategy-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .strategy-card .strategy-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .strategy-card .strategy-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .strategy-card .strategy-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+        .strategy-card .strategy-badge.beginner {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .strategy-card .strategy-badge.intermediate {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .strategy-card .strategy-badge.advanced {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .strategy-card .check-icon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .strategy-card.active .check-icon {
+            display: flex;
+        }
+        .strategy-params {
+            margin-top: 16px;
+            padding: 14px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        .strategy-params h6 {
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #495057;
+        }
+        .param-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .param-row label {
+            min-width: 120px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+        }
+        .param-row input, .param-row select {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -284,6 +399,64 @@
                     <strong>특정 종목만</strong><br>
                     <small class="text-muted">직접 선택한 종목들만 백테스팅</small>
                 </label>
+            </div>
+        </div>
+
+        <!-- Strategy Selection -->
+        <div class="strategy-selector" id="strategy-selector">
+            <h3>투자 전략 선택</h3>
+            <p class="text-muted mb-3">백테스팅에 사용할 투자 전략을 선택하세요.</p>
+
+            <div class="strategy-grid">
+                <!-- 전략 1: 고정시간 매수/매도 (LLD 3.3.2) -->
+                <div class="strategy-card active" data-strategy="daily_trading" onclick="selectStrategy(this)">
+                    <div class="check-icon">✓</div>
+                    <div class="strategy-icon">⏰</div>
+                    <div class="strategy-name">전략 1: 고정시간 매수/매도</div>
+                    <div class="strategy-desc">매일 지정된 시간에 매수하고, 지정된 시간에 매도합니다. 세금(0.2%) + 수수료(0.011%) 비용이 반영됩니다.</div>
+                    <span class="strategy-badge beginner">초급</span>
+                </div>
+
+                <!-- 전략 2: Trailing Stop (LLD 3.3.3) -->
+                <div class="strategy-card" data-strategy="trailing_stop" onclick="selectStrategy(this)">
+                    <div class="check-icon">✓</div>
+                    <div class="strategy-icon">📉</div>
+                    <div class="strategy-name">전략 2: Trailing Stop</div>
+                    <div class="strategy-desc">지정 시간에 매수 후, 다음날 최소 수익 도달 시 이익보전(Trailing Stop) 매도를 합니다. 미도달 시 손절 시간에 매도합니다.</div>
+                    <span class="strategy-badge intermediate">중급</span>
+                </div>
+            </div>
+
+            <!-- Strategy Parameters -->
+            <div class="strategy-params" id="strategy-params">
+                <h6>⚙️ 전략 파라미터</h6>
+                <div id="param-fields">
+                    <!-- 전략 1: 고정시간 매수/매도 기본 파라미터 -->
+                    <div class="param-row">
+                        <label>매수 시간</label>
+                        <input type="time" id="param-buy-time" value="10:00">
+                    </div>
+                    <div class="param-row">
+                        <label>매도 시간</label>
+                        <input type="time" id="param-sell-time" value="15:00">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div style="margin-top: 16px; padding: 12px; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 6px; color: #0c5460;">
+                <strong>현재 설정:</strong>
+                <span id="current-mode-display">전체 종목</span> ·
+                선택 종목 <span id="current-count-display">0</span>개 ·
+                전략: <strong><span id="current-strategy-display">전략 1: 고정시간 매수/매도</span></strong>
+            </div>
+        </div>
+
+        <!-- Global Backtest Button (for all / filtered modes) -->
+        <div id="global-backtest-section" class="specific-stock-section active" style="padding: 20px;">
+            <div class="status-message" id="global-status-message"></div>
+            <div class="action-buttons" style="margin-top: 8px;">
+                <button class="btn-action btn-start" id="global-backtest-btn" onclick="startBacktest()">백테스팅 시작</button>
             </div>
         </div>
 
@@ -386,26 +559,26 @@
                         <td class="metric-name">승률</td>
                         <td class="metric-value" id="metric-win-rate">-</td>
                     </tr>
+                    <tr>
+                        <td class="metric-name">총 비용 (세금+수수료)</td>
+                        <td class="metric-value" id="metric-total-cost">-</td>
+                    </tr>
+                    <tr id="row-sell-reasons" style="display: none;">
+                        <td class="metric-name">매도 사유 분포</td>
+                        <td class="metric-value" id="metric-sell-reasons">-</td>
+                    </tr>
                 </tbody>
             </table>
 
-            <div style="margin-top: 20px;">
-                <button class="btn-action btn-start" onclick="downloadResults()" id="download-btn" style="margin-right: 10px;">결과 다운로드</button>
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-action btn-start" onclick="downloadTradesCsv()" id="download-csv-btn" style="background-color: #0d6efd;">📄 매매내역 CSV 다운로드</button>
+                <button class="btn-action btn-start" onclick="downloadResults()" id="download-btn">결과 JSON 다운로드</button>
                 <button class="btn-action btn-clear" onclick="resetResults()">초기화</button>
             </div>
         </div>
 
-        <!-- Strategy Selection (Placeholder) -->
-        <div class="card mt-4" style="padding: 20px;">
-            <h4>투자 전략 선택</h4>
-            <p class="text-muted">특정 종목을 선택하고 원하는 투자 전략을 선택한 후 백테스팅을 시작하세요.</p>
-            <div style="padding: 10px; background-color: #f8f9fa; border-radius: 6px;">
-                <strong>선택된 모드:</strong> <span id="current-mode-display">전체 종목</span><br>
-                <strong>선택된 종목 수:</strong> <span id="current-count-display">0</span>개
-            </div>
-        </div>
+        <!-- Strategy section moved above -->
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Mock stock data
@@ -422,6 +595,73 @@
 
         let selectedStocks = [];
         let currentMode = 'all';
+        let selectedStrategy = 'daily_trading';
+
+        // Strategy selection
+        function selectStrategy(card) {
+            // Remove active from all cards
+            document.querySelectorAll('.strategy-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            selectedStrategy = card.dataset.strategy;
+
+            // Update display
+            document.getElementById('current-strategy-display').textContent = card.querySelector('.strategy-name').textContent;
+
+            // Update parameter fields
+            updateStrategyParams(selectedStrategy);
+        }
+
+        function updateStrategyParams(strategy) {
+            const container = document.getElementById('param-fields');
+            const paramConfigs = {
+                'daily_trading': `
+                    <div class="param-row">
+                        <label>매수 시간</label>
+                        <input type="time" id="param-buy-time" value="10:00">
+                    </div>
+                    <div class="param-row">
+                        <label>매도 시간</label>
+                        <input type="time" id="param-sell-time" value="15:00">
+                    </div>`,
+                'trailing_stop': `
+                    <div class="param-row">
+                        <label>매수 시간</label>
+                        <input type="time" id="param-buy-time" value="15:30">
+                    </div>
+                    <div class="param-row">
+                        <label>최소 수익률 (%)</label>
+                        <input type="number" id="param-min-profit-pct" value="1.0" min="0.1" max="50" step="0.1">
+                    </div>
+                    <div class="param-row">
+                        <label>이익보전 비율 (%)</label>
+                        <input type="number" id="param-profit-cutoff-pct" value="80" min="1" max="99" step="1">
+                    </div>
+                    <div class="param-row">
+                        <label>손절 시간 (다음날)</label>
+                        <input type="time" id="param-loss-cutoff-time" value="14:00">
+                    </div>`
+            };
+            container.innerHTML = paramConfigs[strategy] || '';
+        }
+
+        function getStrategyParams() {
+            const params = {};
+            switch (selectedStrategy) {
+                case 'daily_trading':
+                    params.type = 'daily_trading';
+                    params.buy_time = document.getElementById('param-buy-time')?.value || '10:00';
+                    params.sell_time = document.getElementById('param-sell-time')?.value || '15:00';
+                    break;
+                case 'trailing_stop':
+                    params.type = 'trailing_stop';
+                    params.buy_time = document.getElementById('param-buy-time')?.value || '15:30';
+                    params.min_profit_pct = parseFloat(document.getElementById('param-min-profit-pct')?.value) || 1.0;
+                    params.profit_cutoff_pct = parseFloat(document.getElementById('param-profit-cutoff-pct')?.value) || 80.0;
+                    params.loss_cutoff_time = document.getElementById('param-loss-cutoff-time')?.value || '14:00';
+                    break;
+            }
+            return params;
+        }
 
         // Mode switching
         document.querySelectorAll('input[name="stock-mode"]').forEach(radio => {
@@ -434,11 +674,14 @@
 
         function switchMode() {
             const section = document.getElementById('specific-stock-section');
+            const globalSection = document.getElementById('global-backtest-section');
             if (currentMode === 'specific') {
                 section.classList.add('active');
+                globalSection.classList.remove('active');
                 sendModeToServer('specific');
             } else {
                 section.classList.remove('active');
+                globalSection.classList.add('active');
                 selectedStocks = [];
                 updateStocksList();
                 sendModeToServer(currentMode);
@@ -536,12 +779,20 @@
         }
 
         function showStatus(message, type) {
-            const statusElement = document.getElementById('status-message');
+            // Show status in the appropriate section based on current mode
+            const statusId = currentMode === 'specific' ? 'status-message' : 'global-status-message';
+            const statusElement = document.getElementById(statusId);
             statusElement.textContent = message;
             statusElement.className = `status-message ${type}`;
             setTimeout(() => {
                 statusElement.className = 'status-message';
             }, 3000);
+        }
+
+        function getActiveBacktestBtn() {
+            return currentMode === 'specific' 
+                ? document.getElementById('backtest-btn') 
+                : document.getElementById('global-backtest-btn');
         }
 
         async function sendModeToServer(mode) {
@@ -576,25 +827,34 @@
         }
 
         async function startBacktest() {
-            if (selectedStocks.length === 0) {
-                showStatus('최소 1개 이상의 종목을 선택해주세요.', 'error');
+            if (currentMode === 'specific' && selectedStocks.length === 0) {
+                showStatus('특정 종목 모드에서는 최소 1개 이상의 종목을 선택해주세요.', 'error');
                 return;
             }
 
             try {
                 // Disable button
-                const backTestBtn = document.getElementById('backtest-btn');
+                const backTestBtn = getActiveBacktestBtn();
                 backTestBtn.disabled = true;
                 
-                showStatus(`${selectedStocks.length}개 종목에 대한 백테스팅을 시작합니다...`, 'success');
+                showStatus(`${selectedStocks.length > 0 ? selectedStocks.length + '개 종목에 대한 ' : ''}${selectedStrategy === 'trailing_stop' ? '전략 2 (Trailing Stop)' : '전략 1 (고정시간)'} 백테스팅을 시작합니다...`, 'success');
                 console.log('Starting backtest with:', selectedStocks);
 
+                // 최근 60일 기간 동적 계산
+                const now = new Date();
+                const sixtyDaysAgo = new Date(now);
+                sixtyDaysAgo.setDate(now.getDate() - 60);
+                const endDateStr = now.toISOString().split('T')[0];
+                const startDateStr = sixtyDaysAgo.toISOString().split('T')[0];
+
                 const payload = {
-                    strategy: 'MA20_50', // 기본 전략
-                    start_date: '2024-01-01', // 기본 시작일
-                    end_date: '2025-12-31',   // 기본 종료일
+                    strategy: selectedStrategy,
+                    start_date: startDateStr, // 최근 60일 시작일
+                    end_date: endDateStr,     // 오늘
                     initial_capital: 10000000, // 초기 자본 1000만원
-                    stock_mode: currentMode
+                    stock_mode: currentMode,
+                    stock_code: selectedStocks.length > 0 ? selectedStocks[0].code : '005930',
+                    strategy_params: getStrategyParams()
                 };
 
                 const response = await fetch('/api/backtest/start', {
@@ -617,7 +877,7 @@
                     showStatus(`오류: ${data.error}`, 'error');
                 }
             } catch (error) {
-                document.getElementById('backtest-btn').disabled = false;
+                getActiveBacktestBtn().disabled = false;
                 console.error('Failed to start backtest:', error);
                 showStatus(`API 호출 실패: ${error.message}`, 'error');
             }
@@ -650,7 +910,7 @@
                     if (attempt > maxAttempts) {
                         clearInterval(pollTimer);
                         showStatus('타임아웃: 백테스팅이 30분 이상 진행되었습니다.', 'error');
-                        document.getElementById('backtest-btn').disabled = false;
+                        getActiveBacktestBtn().disabled = false;
                         reject(new Error('Timeout'));
                         return;
                     }
@@ -689,7 +949,7 @@
                         } else if (progressData.status === 'error') {
                             clearInterval(pollTimer);
                             showStatus(`백테스팅 오류: ${progressData.error_message || '알 수 없는 오류'}`, 'error');
-                            document.getElementById('backtest-btn').disabled = false;
+                            getActiveBacktestBtn().disabled = false;
                             reject(new Error(progressData.error_message));
                         }
                     } catch (error) {
@@ -718,7 +978,7 @@
 
                 // Display results
                 displayResults(results);
-                document.getElementById('backtest-btn').disabled = false;
+                getActiveBacktestBtn().disabled = false;
                 showStatus('✓ 백테스팅이 완료되었습니다!', 'success');
 
             } catch (error) {
@@ -730,7 +990,7 @@
                     return fetchAndDisplayResults(backtestId, retryCount + 1);
                 } else {
                     showStatus(`결과 조회 실패: ${error.message}`, 'error');
-                    document.getElementById('backtest-btn').disabled = false;
+                    getActiveBacktestBtn().disabled = false;
                 }
             }
         }
@@ -740,7 +1000,12 @@
             
             // Set success badge text
             const successBadge = document.getElementById('results-success-badge');
-            successBadge.textContent = `✓ 백테스팅 완료: ${results.backtest_id}`;
+            const strategyLabel = results.strategy === 'strategy2_trailing_stop' 
+                ? '전략 2: Trailing Stop' 
+                : results.strategy === 'strategy1_fixed_time' 
+                    ? '전략 1: 고정시간 매수/매도' 
+                    : results.strategy || '';
+            successBadge.textContent = `✓ 백테스팅 완료: ${results.backtest_id} (${strategyLabel})`;
 
             // Set metadata
             document.getElementById('results-backtest-id').textContent = results.backtest_id;
@@ -800,6 +1065,29 @@
             winRateElement.textContent = winRateValue;
             winRateElement.className = 'metric-value positive';
 
+            // Total cost (세금+수수료)
+            const totalCost = performance.total_cost || 0;
+            document.getElementById('metric-total-cost').textContent = 
+                typeof totalCost === 'number' ? totalCost.toLocaleString() + '원' : totalCost;
+
+            // Sell reason stats (전략 2 전용)
+            const sellReasonRow = document.getElementById('row-sell-reasons');
+            const sellReasonStats = results.sell_reason_stats;
+            if (sellReasonStats && Object.keys(sellReasonStats).length > 0) {
+                sellReasonRow.style.display = '';
+                const reasonLabels = {
+                    'trailing_stop': '이익보전(TS)',
+                    'loss_cutoff': '손절',
+                    'end_of_day': '장마감'
+                };
+                const parts = Object.entries(sellReasonStats).map(([key, val]) => 
+                    `${reasonLabels[key] || key}: ${val}건`
+                );
+                document.getElementById('metric-sell-reasons').textContent = parts.join(' / ');
+            } else {
+                sellReasonRow.style.display = 'none';
+            }
+
             // Show results section
             resultsSection.classList.add('active');
         }
@@ -814,6 +1102,54 @@
             }
         }
 
+        /**
+         * 매매내역 CSV 다운로드 - 서버 사이드 CSV 생성 엔드포인트 호출
+         */
+        async function downloadTradesCsv() {
+            const backtestId = document.getElementById('results-backtest-id').textContent;
+            if (!backtestId || backtestId === '-') {
+                showStatus('다운로드할 결과가 없습니다.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/backtest/result/${backtestId}/csv`, {
+                    method: 'GET'
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || `HTTP ${response.status}`);
+                }
+
+                // Get filename from Content-Disposition header or use default
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = `backtest-trades-${backtestId}.csv`;
+                if (disposition) {
+                    const match = disposition.match(/filename="(.+)"/);
+                    if (match) filename = match[1];
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+                showStatus(`✓ 매매내역 CSV가 다운로드되었습니다. (${filename})`, 'success');
+            } catch (error) {
+                console.error('Failed to download CSV:', error);
+                showStatus(`CSV 다운로드 실패: ${error.message}`, 'error');
+            }
+        }
+
+        /**
+         * 결과 JSON 다운로드 - 전체 백테스트 결과 (성과지표 + 매매내역)
+         */
         async function downloadResults() {
             const backtestId = document.getElementById('results-backtest-id').textContent;
             if (!backtestId || backtestId === '-') {
@@ -822,7 +1158,6 @@
             }
 
             try {
-                // Fetch the latest results from the correct endpoint
                 const response = await fetch(`/api/backtest/result/${backtestId}`, {
                     method: 'GET'
                 });
@@ -832,48 +1167,14 @@
                 }
 
                 const results = await response.json();
-                
-                // Prepare download data with all metrics
-                const downloadData = {
-                    backtest_id: results.backtest_id,
-                    completed_at: results.completed_at,
-                    performance: {
-                        total_return: document.getElementById('metric-total-return').textContent,
-                        sharpe_ratio: document.getElementById('metric-sharpe-ratio').textContent,
-                        max_drawdown: document.getElementById('metric-max-drawdown').textContent,
-                        total_trades: document.getElementById('metric-total-trades').textContent,
-                        win_rate: document.getElementById('metric-win-rate').textContent
-                    }
-                };
+                const jsonContent = JSON.stringify(results, null, 2);
 
-                // Create CSV format (alternative to JSON)
-                const csvContent = generateCsvContent(downloadData);
-                
-                // Generate JSON format
-                const jsonContent = JSON.stringify(downloadData, null, 2);
-
-                // Download as JSON
                 downloadFile(jsonContent, `backtest-result-${backtestId}.json`, 'application/json');
-                
-                showStatus(`✓ 백테스트 결과가 다운로드되었습니다.`, 'success');
+                showStatus(`✓ 백테스트 결과(JSON)가 다운로드되었습니다.`, 'success');
             } catch (error) {
                 console.error('Failed to download results:', error);
                 showStatus(`다운로드 실패: ${error.message}`, 'error');
             }
-        }
-
-        function generateCsvContent(data) {
-            let csv = 'Backtest Report\n\n';
-            csv += `Backtest ID,${data.backtest_id}\n`;
-            csv += `Completed At,${data.completed_at}\n\n`;
-            csv += 'Performance Metrics\n';
-            csv += 'Metric,Value\n';
-            csv += `Total Return,${data.performance.total_return}\n`;
-            csv += `Sharpe Ratio,${data.performance.sharpe_ratio}\n`;
-            csv += `Max Drawdown,${data.performance.max_drawdown}\n`;
-            csv += `Total Trades,${data.performance.total_trades}\n`;
-            csv += `Win Rate,${data.performance.win_rate}\n`;
-            return csv;
         }
 
         function downloadFile(content, filename, mimeType) {

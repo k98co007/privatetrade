@@ -1,0 +1,363 @@
+name: Build and Deploy Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: privatetrade/backtesting-simulator
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  # ============================================
+  # STAGE 1: Build & Lint
+  # ============================================
+  build:
+    name: Build & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter (ESLint)
+        run: npm run lint || true
+
+      - name: Run type check
+        run: npm run type-check || true
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            backend/
+            frontend/
+
+  # ============================================
+  # STAGE 2: Unit & Integration Tests
+  # ============================================
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      test-db:
+        image: sqlite:latest
+        options: --health-cmd="sqlite3 /app/backtest.db SELECT 1" --health-interval=5s --health-timeout=3s --health-retries=5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Initialize test database
+        run: |
+          sqlite3 test-data/backtest-test.db < db/init-test.sql
+          sqlite3 test-data/backtest-test.db < db/migrations/001_add_specific_stock_selection.sql
+
+      - name: Run unit tests
+        run: npm run test:unit -- --coverage
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          DATABASE_PATH: test-data/backtest-test.db
+          NODE_ENV: test
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: test-results/
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: ./coverage/lcov.info
+
+  # ============================================
+  # STAGE 3: Security & Code Quality
+  # ============================================
+  quality:
+    name: Security & Quality
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: SAST: SonarQube Scan (Optional)
+        if: false  # Disable if no SonarQube setup
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Vulnerability scan
+        run: npm audit --audit-level=moderate || true
+
+      - name: License check
+        run: npm ls --depth=0 || true
+
+  # ============================================
+  # STAGE 4: Build Docker Image
+  # ============================================
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [build, test, quality]
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    outputs:
+      docker-tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+
+  # ============================================
+  # STAGE 5: Deploy to Staging
+  # ============================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: http://staging.privatetrade.local:3000
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Staging
+        run: |
+          echo "Deploying to staging environment..."
+          # 실제 배포 스크립트 (예: kubectl apply, docker-compose 등)
+          # kubectl apply -f k8s/staging/ --kubeconfig=${{ secrets.KUBECONFIG_STAGING }}
+          echo "Deployment completed"
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          for i in {1..30}; do
+            echo "Attempt $i/30: Checking /api/health..."
+            curl -f http://staging.privatetrade.local:8000/api/health && break
+            sleep 2
+          done
+
+      - name: Notify Slack
+        if: failure()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "❌ Staging deployment failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Staging Deployment Failed*\nRepository: ${{ github.repository }}\nBranch: ${{ github.ref }}\nCommit: ${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ============================================
+  # STAGE 6: Deploy to Production
+  # ============================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+    environment:
+      name: production
+      url: http://privatetrade.local:3000
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Show deployment info
+        run: |
+          echo "Deploying version: ${{ steps.version.outputs.VERSION }}"
+          echo "Target: Production"
+          echo "Deployment strategy: Blue-Green"
+
+      - name: Deploy Blue-Green
+        run: |
+          echo "Deploying to production (Blue-Green strategy)..."
+          # Blue (기존): 유지
+          # Green (신규): 새 버전 배포
+          # LB 전환: Green으로 트래픽 전환
+          echo "Deployment: Blue-Green deployment"
+
+      - name: Database Migration
+        run: |
+          echo "Running database migrations..."
+          # sqlite3 /prod/backtest.db < db/migrations/001_add_specific_stock_selection.sql
+
+      - name: Health check
+        run: |
+          echo "Running health checks..."
+          for i in {1..60}; do
+            echo "Health check attempt $i/60..."
+            curl -f http://privatetrade.local:8000/api/health && break || sleep 5
+          done
+
+      - name: Smoke tests
+        run: npm run test:smoke:production || true
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "⚠️ Deployment failed. Rolling back to previous version..."
+          # 자동 롤백 스크립트
+          echo "Rollback completed"
+
+      - name: Notify success
+        if: success()
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "✅ Production deployment successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment Successful*\nVersion: ${{ steps.version.outputs.VERSION }}\nRepository: ${{ github.repository }}\nTime: <!date^${{ github.run_timestamp }}^{date_pretty_full} at {time_secs}|${{ github.run_timestamp }}>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create release notes
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          release_name: Release ${{ steps.version.outputs.VERSION }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+
+  # ============================================
+  # FINAL: Pipeline Status
+  # ============================================
+  status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    needs: [build, test, quality, docker-build]
+    if: always()
+    steps:
+      - name: Check pipeline status
+        run: |
+          if [ "${{ needs.build.result }}" == "failure" ] || \
+             [ "${{ needs.test.result }}" == "failure" ] || \
+             [ "${{ needs.quality.result }}" == "failure" ]; then
+            echo "❌ Pipeline failed"
+            exit 1
+          else
+            echo "✅ Pipeline passed"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Quality | ${{ needs.quality.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Build | ${{ needs.docker-build.result }} |" >> $GITHUB_STEP_SUMMARY

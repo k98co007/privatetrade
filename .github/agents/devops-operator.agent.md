@@ -127,3 +127,23 @@ DevOps 운영 완료 기준:
 - **edit**: DevOps 설정 파일 수정 (모니터링, 알림 설정)
 - **search**: 로그 분석, 에러 메시지 검색
 - **agent**: 운영 에이전트에게 장애 보고, 버그 리포트 발행, CI/CD 담당자와 협의
+
+### 파일 생성 및 정리 규칙
+
+모든 에이전트는 다음 파일 관리 규칙을 준수해야 합니다:
+
+#### 티켓 보고서 위치
+- 모든 티켓 관련 보고서, 완료 리포트, 체크리스트, 요약 문서는 반드시 `docs/tickets/reports/` 폴더에 생성
+- 예시: `TICKET-XXX-COMPLETION-REPORT.md`, `TICKET-XXX-DEPLOYMENT-REPORT.md`, `TICKET-XXX-EXECUTIVE-SUMMARY.md`
+- **금지**: 프로젝트 최상위 폴더에 티켓 관련 문서 생성
+
+#### 테스트 스크립트 관리
+- 임시 테스트 스크립트나 검증 스크립트 규칙:
+  - 일회성 검증 스크립트: 작업 완료 후 즉시 삭제
+  - 재사용 가능한 테스트: 적절한 테스트 디렉토리에 배치 (`test/`, `backend/test/`, `py_backtest/test/` 등)
+- **금지**: 프로젝트 최상위 폴더에 `test_*.py`, `test_*.js`, `verify_*.py` 등의 임시 파일 남기기
+
+#### 프로젝트 루트 정리
+- 프로젝트 최상위 폴더는 주요 설정 파일만 유지 (`package.json`, `requirements.txt`, `docker-compose.yml`, `README.md` 등)
+- 작업 산출물은 반드시 적절한 하위 디렉토리에 구조화하여 저장
+- 작업 완료 시 임시 파일 및 불필요한 파일 정리 필수

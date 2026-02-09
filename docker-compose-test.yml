@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # Test Database Service
+  test-db:
+    image: sqlite:latest-lightweight
+    container_name: privatetrade-test-db
+    volumes:
+      - ./test-data/backtest-test.db:/app/backtest.db
+      - ./db/migrations:/app/migrations
+    environment:
+      SQLITE_DATABASE: /app/backtest.db
+    ports:
+      - "3306:3306"  # SQLite doesn't use port, placeholder
+    healthcheck:
+      test: ["CMD", "sqlite3", "/app/backtest.db", "SELECT 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Test Backend Server
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: privatetrade-backend-test
+    depends_on:
+      test-db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_ENV: test
+      DATABASE_PATH: /app/test-data/backtest-test.db
+      LOG_LEVEL: debug
+      PORT: 8000
+    volumes:
+      - ./backend:/app/backend
+      - ./test-data:/app/test-data
+    command: npm run test:server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Mock API Server (for external API mocking)
+  mock-api:
+    image: mockserver/mockserver:latest
+    container_name: privatetrade-mock-api
+    ports:
+      - "1080:1080"
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/mockserver-init.json
+    volumes:
+      - ./test-data/mockserver-init.json:/config/mockserver-init.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1080/mockserver/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Test Runner (Jest)
+  test-runner:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: privatetrade-test-runner
+    depends_on:
+      backend-test:
+        condition: service_healthy
+      mock-api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: test
+      API_URL: http://backend-test:8000
+      MOCK_API_URL: http://mock-api:1080
+      DATABASE_PATH: /app/test-data/backtest-test.db
+    volumes:
+      - ./backend:/app/backend
+      - ./test-results:/app/test-results
+      - ./test-data:/app/test-data
+    command: npm run test:integration
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/test-results/junit-report.xml"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  default:
+    name: privatetrade-test-network
+    driver: bridge
+
+volumes:
+  test-db-volume:
+    driver: local
